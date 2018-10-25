@@ -1,0 +1,354 @@
+---
+title: "Work for Project"
+output: word_document
+---
+###Basic Variable creation 
+```{r setup, include=FALSE}
+library(XML)
+library(epitools)
+library(Hmisc)
+library(dplyr)
+library(reshape2)
+library(data.table)
+library(ggplot2)
+library(tidyverse)
+library(modelr)
+library(lme4)
+library(dplyr)
+library(Hmisc)
+library(plyr)
+library(sp)
+library(maptools) 
+library(lattice)
+library(latticeExtra)
+library(rgdal)
+library(classInt)
+library(grid)
+library(gridExtra)
+library(tibble)
+library(corrplot)
+
+all1 <- read.csv('/Users/alexandraschwartz/Desktop/Fall 2018/R and Python/R Project/MozSyntheticMalaria.csv')
+data <- subset(all1, Epiyear < 2017 & Epiweek < 53)
+
+data <- mutate(data, u5mal= (malaria / (Population_UN * u5weight))*1000)
+
+head(data)
+
+#Basic function for lags 
+
+lags <- seq(2,20, by = 2)
+lag_names <- paste("lag", formatC(lags, width = nchar(max(lags)), flag = "0"), 
+  sep = "_")
+lag_functions <- setNames(paste("dplyr::lag(., ", lags, ")"), lag_names)
+
+#Lag for tagv 
+sel_tavg <- select(data, tavg)
+tavg_lag <- sel_tavg %>% mutate_at(vars(tavg), funs_(lag_functions))
+as.tibble(tavg_lag)
+tavg_lag <- mutate(tavg_lag, u5mal = data$u5mal)
+head(tavg_lag)
+
+#Lag of rain and rainTot
+
+sel_rain <- select(data, rain)
+rain_lag <- sel_rain %>% mutate_at(vars(rain), funs_(lag_functions))
+as.tibble(rain_lag)
+rain_lag <- mutate(rain_lag, u5mal = data$u5mal)
+head(rain_lag)
+
+sel_rainTot <- select(data, rainTot)
+rainTot_lag <- sel_rainTot %>% mutate_at(vars(rainTot), funs_(lag_functions))
+as.tibble(rainTot_lag)
+rainTot_lag <- mutate(rainTot_lag, u5mal = data$u5mal)
+head(rainTot_lag)
+
+#Lags for rh and sd - humidity 
+sel_rh <- select(data, rh)
+rh_lag <- sel_rh %>% mutate_at(vars(rh), funs_(lag_functions))
+as.tibble(rh_lag)
+rh_lag <- mutate(rh_lag, u5mal = data$u5mal)
+head(rh_lag)
+
+sel_sd <- select(data, sd)
+sd_lag <- sel_sd %>% mutate_at(vars(sd), funs_(lag_functions))
+as.tibble(sd_lag)
+sd_lag <- mutate(sd_lag, u5mal = data$u5mal)
+head(sd_lag)
+
+#Lag for phfc - weather 
+sel_psfc <- select(data, psfc)
+psfc_lag <- sel_psfc %>% mutate_at(vars(psfc), funs_(lag_functions))
+as.tibble(psfc_lag)
+psfc_lag <- mutate(psfc_lag, u5mal = data$u5mal)
+head(psfc_lag)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###Correltion on Lagged Variables 
+```{r, echo=T, message=T, warning=T}
+
+#Malaria and lag of tavg 
+cor_lag_tavg <- cor(tavg_lag,use = "complete.obs")
+#cor_lag_tavg2 <- rcorr(as.matrix(tavg_lag,use = "complete.obs"))
+#Lag 14 (0.206952410) and 16 (0.210115235) are most highly correlated 
+#p = 0.0000 for both 
+
+#Malaria and lag of rain 
+cor_lag_rain <- cor(rain_lag,use = "complete.obs")
+#cor_lag_rain2 <- rcorr(as.matrix(rain_lag,use = "complete.obs"))
+#Lag 4 most highly correlated (0.13), p= 0.000 
+# 6- 8 are close (.12)
+
+#Malaria and lag of rainTot
+cor_lag_rainTot <- cor(rainTot_lag,use = "complete.obs")
+#cor_lag_rainTot2 <- rcorr(as.matrix(rainTot_lag,use = "complete.obs"))
+#Lag 4 most highly correlated (0.12), p= 0.000 
+# 6- 10 are close (.11)
+
+#Malaria and rh 
+cor_lag_rh <- cor(rh_lag,use = "complete.obs")
+#cor_lag_rh2 <- rcorr(as.matrix(rh_lag,use = "complete.obs"))
+#Lag 4 mostly highly correlated (.25), p=0.000
+# 2 is close (.24)
+
+#Malaria and sd 
+cor_lag_sd <- cor(sd_lag,use = "complete.obs")
+#cor_lag_sd2 <- rcorr(as.matrix(sd_lag,use = "complete.obs"))
+#Lag 20 most highly positively correlated (.14), p= 0.000, lag 4 most negatively correlated (-.21) but sd and regular lag are also (-.2)- need to look into this 
+
+#Malaria and psfc
+cor_lag_psfc <- cor(psfc_lag,use = "complete.obs")
+#cor_lag_psfc2 <- rcorr(as.matrix(psfc_lag,use = "complete.obs"))
+#Little difference in lags bu lag 12 has highest correlation 
+
+cor_psfc_col<- cor_lag_psfc[,c('u5mal')]
+cor_sd_col<- cor_lag_sd[,c('u5mal')]
+cor_rh_col<- cor_lag_rh[,c('u5mal')]
+cor_rain_col<- cor_lag_rain[,c('u5mal')]
+cor_rainTot_col <- cor_lag_rainTot[,c('u5mal')]
+cor_tavg_col <-  cor_lag_tavg[,c('u5mal')]
+
+cormatrix <- matrix( 
+c(cor_psfc_col, cor_sd_col, cor_rh_col, cor_rain_col, cor_rainTot_col, cor_tavg_col),nrow=12, ncol=6)
+
+rownames(cormatrix) <- c("Lag 0", "Lag 2", "Lag 4", "Lag 6", "Lag 8", "Lag 10", "Lag 12", "Lag 14", "Lag 16", "Lag 18", "Lag 20", "u5mal")
+colnames(cormatrix) <- c("psfc", "sd", "rh", "rain", "rainTot", "tavg")
+
+#Remove u5mal row 
+cormatrix <- cormatrix[-12,]
+
+corrplot(cormatrix, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix),max(cormatrix)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Malaria and Lagged Climate Variable Correlations", mar=c(0,0,3,0))
+
+```
+
+###Graphs for associations of climate variabls with malaria including lags but not region 
+```{r, echo=T, message=T, warning=T}
+#Add most associated lags to data so its all in one place 
+data3 <- as.tibble(data)
+
+data3 <- mutate(data3, tavg_lag_16 = tavg_lag$lag_16, rain_lag_04 = rain_lag$lag_04, rh_lag_04 = rh_lag$lag_04, psfc_lag_12 = psfc_lag$lag_12)
+
+str(data3)
+
+#Plots of lagged var
+plot_tavg <- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = tavg_lag_16, y = u5mal), color = "red") + 
+  labs(x = "Avg Temperature-16 wk lag", 
+       y = "Cases per 1,000")
+plot_rain<- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = rain_lag_04, y = u5mal)) + 
+  labs(x = "Avg Rainfall-4 wk lag", 
+       y = "Cases per 1,000")
+plot_rh <- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = rh_lag_04, y = u5mal), color = "orange") + 
+  labs(x = "Relative Humitidy-4 wk lag", 
+       y = "Cases per 1,000")
+plot_psfc <- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = psfc_lag_12, y = u5mal), color = "purple") + 
+  labs(x = "Surface Barometric Pressure-12 wk lag", 
+       y = "Cases per 1,000")
+
+#grid of this 
+cl_mal_plot <- grid.arrange(plot_tavg, plot_rain, plot_rh, plot_psfc, nrow= 2, top = textGrob("Relationships between Climate Variables and Malaria",gp=gpar(fontsize=16,font=3)))
+
+```
+### Graphs for associations of climate variabls with malaria including lags and region 
+```{r, echo=T, message=T, warning=T}
+plot2_tavg <- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = tavg_lag_16, y = u5mal, color = Region)) + 
+  labs(x = "Avg Temperature-16 wk lag", 
+       y = "Cases per 1,000", color = "Region")
+plot2_rain<- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = rain_lag_04, y = u5mal, color = Region)) + 
+  labs(x = "Avg Rainfall-4 wk lag", 
+       y = "Cases per 1,000", color = "Region")
+plot2_rh <- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = rh_lag_04, y = u5mal, color = Region)) + 
+  labs(x = "Relative Humitidy-4 wk lag", 
+       y = "Cases per 1,000",color = "Region")
+plot2_psfc <- ggplot(data = data3) +
+  geom_smooth(mapping = aes(x = psfc_lag_12, y = u5mal,color = Region)) + 
+  labs(x = "Surface Barometric Pressure-12 wk lag", 
+       y = "Cases per 1,000", color = "Region")
+
+#grid of this 
+reg_plot <- grid.arrange(plot2_tavg, plot2_rain, plot2_rh, plot2_psfc, nrow= 2, top = textGrob("Climate Variable and Malaria Relationships by Region",gp=gpar(fontsize=15,font=3)))
+```
+#Change in Malaria, tavg, and rain over time with season added 
+```{r, echo=T, message=T, warning=T}
+#Create summer variable 
+data3 <- mutate(data3, Season = ifelse(Epiweek < 10, "summer", ifelse(Epiweek > 47, "summer", "other")))
+head(data3)
+data4 <- select(data3, Epiweek, Epiyear, Season, u5mal, Region, rain, tavg)
+head(data4)
+(as.tibble(data4))
+
+#Create histograms for season/total of var over time 
+seas_mal <- ggplot(data4, aes(x=factor(Epiyear), y=u5mal, fill = Season, Color = Season)) +
+  geom_histogram(stat = "identity", breaks=2010:2016) +
+  scale_fill_manual(values = c("aquamarine","aquamarine3")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    labs(title = "Age <5 Malaria Cases per 1000 by EpiYear and Season", x = "Year", y = "Malaria", color = "Season")
+
+seas_tavg <- ggplot(data4, aes(x=factor(Epiyear), y=tavg, fill = Season, Color = Season)) +
+  geom_histogram(stat = "identity", breaks=2010:2016) +
+   scale_fill_manual(values = c("aquamarine","aquamarine3")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    labs(title = "Average Weekly Temp by EpiYear and Season", x = "Year", y = "Temp", color = "Season")
+
+seas_rain <- ggplot(data4, aes(x=factor(Epiyear), y=rain, fill = Season, Color = Season)) +
+  geom_histogram(stat = "identity", breaks=2010:2016) +
+  scale_fill_manual(values = c("aquamarine","aquamarine3")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    labs(title = "Average Weekly Rainfall by EpiYear and Season", x = "Year", y = "Rainfall", color = "Season")
+
+#Graphic with all 3 vars 
+seas_plot <- grid.arrange(seas_mal, seas_tavg, seas_rain, nrow=3, top = textGrob("Effect of Summer Season on Malaria, Rainfall, and Temperature Over Time",gp=gpar(fontsize=15,font=3)))
+
+```
+###Season and Malaria by Region (and year)
+```{r, echo=T, message=T, warning=T}
+
+limyr <- subset(data4, Epiyear <= 2016 & Epiyear > 2010)
+#Don't want to show this graphic - use in write up to say relationship b/t season/malaria and region does not differ much over time 
+
+#seas_reg <- ggplot(data = limyr, aes(x = Region, y = u5mal, fill = Season, Color = Season)) +
+  #geom_histogram(aes(colour = Season, fill = Season), stat="identity") + facet_wrap(~ Epiyear, nrow=2)+ 
+  #theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) 
+
+seas_reg_allyrs <- ggplot(data4, aes(x=factor(Region), y=u5mal, fill = Season, Color = Season)) +
+  geom_histogram(stat = "identity", breaks=2010:2016) +
+  scale_fill_manual(values = c("aquamarine","aquamarine3")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    labs(title = "Age <5 Malaria Cases per 1000 by Region and Season", x = "Region", y = "Malaria", color = "Season")
+
+```
+###Maps
+```{r, echo=T, message=T, warning=T}
+#Creat dataframe for mapping 
+data2 <- as.tibble(data)
+data2$tavglag <- tavg_lag$lag_16
+data2$rainlag <- rain_lag$lag_04
+data2$rhlag <- rh_lag$lag_04
+data2$psfclag <- psfc_lag$lag_12 
+
+str(data2)
+
+dataset<- select(data2, u5mal, Province, District, Epiyear, tavglag, rainlag, rhlag, psfclag) 
+str(dataset)
+
+#dataset <- filter(dataset1, Province != "MAPUTO CIDADE")
+
+mal_map<- as.data.frame(tapply(dataset$u5mal, list(dataset$Province, dataset$Epiyear), sum))
+colnames(mal_map) <- c("mal10", "mal11", "mal12", "mal13", "mal14", "mal15", "mal16")
+summary(mal_map)
+#1125 - 19299
+
+rain_map<- as.data.frame(tapply(dataset$rainlag, list(dataset$Province, dataset$Epiyear), sum))
+colnames(rain_map) <- c("rain10", "rain11", "rain12", "rain13", "rain14", "rain15", "rain16")
+summary(rain_map)
+#181.9 - 2206.6
+
+tavg_map<- as.data.frame(tapply(dataset$tavglag, list(dataset$Province, dataset$Epiyear),
+mean))
+#how do I choose between sum and mean here 
+colnames(tavg_map) <- c("t10", "t11", "t12", "t13", "t14", "t15", "t16")
+summary(tavg_map)
+#21.22 -25.16
+
+psfc_map <- as.data.frame(tapply(dataset$psfclag, list(dataset$Province, dataset$Epiyear),
+mean))
+colnames(psfc_map) <- c("psfc10", "psfc11", "psfc12", "psfc13", "psfc14", "psfc15", "psfc16")
+summary(psfc_map)
+#927.8 - 1010.5
+
+rh_map <- as.data.frame(tapply(dataset$rhlag, list(dataset$Province, dataset$Epiyear),
+mean))
+colnames(rh_map) <- c("rh10", "rh11", "rh12", "rh13", "rh14", "rh15", "rh16")
+summary(rh_map)
+#59.74 - 80.78
+
+allStats1 <- as.data.frame(cbind(mal_map, rain_map, tavg_map, psfc_map, rh_map))
+row.names(allStats1)
+
+allStats <- allStats1[-c(6),]
+row.names(allStats)
+
+row.names(allStats) <- c("Cabo Delgado","Gaza","Inhambane", "Manica", "Maputo", "Nampula", "Nassa", "Sofala","Tete", "Zambezia")
+
+#Shape files and ID Var
+poly1 <- readShapePoly('/Users/alexandraschwartz/Desktop/Fall 2018/R and Python/Homework /Homework 4/Shape Files/mozambique_admin1.shp')
+factor(poly1$NAME1)
+poly1 <- readShapePoly('/Users/alexandraschwartz/Desktop/Fall 2018/R and Python/Homework /Homework 4/Shape Files/mozambique_admin1.shp', IDvar='NAME1')
+polydat <- SpatialPolygonsDataFrame(poly1, allStats)
+
+#color paletes
+RainPal <- brewer.pal(n = 6, name = "Blues")
+MalPal <- brewer.pal(n = 7, name = "Greens")
+TavgPal <- brewer.pal(n = 7, name = "Reds")
+RhPal <- brewer.pal(n = 7, name = "Oranges")
+PsfcPal <- brewer.pal(n = 7, name = "Purples")
+
+#Malaria year maps 
+breaks.qt.mal <- classIntervals(1125:19299, n = 6, style = "quantile", intervalClosure = "right")
+Mal_map.plot <- spplot(polydat, c("mal11", "mal12", "mal13", "mal14", "mal15", "mal16"), 
+names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
+colorkey=list(space="right"), scales = list(draw = TRUE), 
+main = list(label = "Total Under 5 malaria Cases by Year", cex = .75), 
+as.table = TRUE, col.regions = MalPal, col="transparent", at = breaks.qt.mal$brks)
+
+#Rain year maps
+breaks.qt.rain <- classIntervals(180.5:1600, n = 6, style = "quantile", intervalClosure = "right")
+Rain_map.plot <- spplot(polydat, c("rain11", "rain12", "rain13", "rain14", "rain15", "rain16"), 
+names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
+colorkey=list(space="right"), scales = list(draw = TRUE), 
+main = list(label = "Total Rainfall by Year",cex = .75), 
+as.table = TRUE, col.regions = RainPal, col="transparent", at = breaks.qt.rain$brks)
+
+#Tavg and year maps 
+breaks.qt.tavg <- classIntervals(21:25.5, n = 6, style = "quantile", intervalClosure = "right")
+Tavg_map.plot <- spplot(polydat, c("t11", "t12", "t13", "t14", "t15", "t16"), 
+names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
+colorkey=list(space="right"), scales = list(draw = TRUE), 
+main = list(label = "Average Temp by Year",cex=.75), 
+as.table = TRUE, col.regions = TavgPal, col="transparent", at = breaks.qt.tavg$brks)
+
+#rh and year maps
+breaks.qt.rh <- classIntervals(59.5:80, n = 6, style = "quantile", intervalClosure = "right")
+Rh_map.plot <- spplot(polydat, c("rh11", "rh12", "rh13", "rh14", "rh15", "rh16"), 
+names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
+colorkey=list(space="right"), scales = list(draw = TRUE), 
+main = list(label = "Average rh by Year", cex = .75), 
+as.table = TRUE, col.regions = RhPal, col="transparent", at = breaks.qt.rh$brks)
+
+#psfc and year maps 
+breaks.qt.psfc <- classIntervals(927.5:1011, n = 6, style = "quantile", intervalClosure = "right")
+Psfc_map.plot <- spplot(polydat, c("psfc11", "psfc12", "psfc13", "psfc14", "psfc15", "psfc16"), 
+names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
+colorkey=list(space="right"), scales = list(draw = TRUE), 
+main = list(label ="Average psfc by Year", cex = .75),
+as.table = TRUE, col.regions = PsfcPal, col="transparent", at = breaks.qt.psfc$brks)
+
+```
