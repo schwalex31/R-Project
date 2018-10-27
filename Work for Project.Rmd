@@ -1,9 +1,25 @@
 ---
-title: "Work for Project"
-output: word_document
+title: 'R Project'
+author: "Alex Schwartz"
+date: "October 26th, 2018"
+output:
+  word_document: default
+  fig_caption: yes
+  number_sections: yes
+  pdf_document: default
+  html_document: default
 ---
-###Basic Variable creation 
-```{r setup, include=FALSE}
+
+## BACKGROUND 
+#### Malaria is an infection caused by mosquito bite and it results in a variety of outcomes (mild symptoms, severe symptoms, relapse and recurrent disease, death), and symptoms (fever, chills, sweats, vomiting, body aches, and additional symptoms).  Climatic factors, most notably humidity, rainfall, and temperature, and weather variation play a large part in where malaria occurs.  The relationship between climate and malaria is important because climatic factors affect the mosquitos’ growth cycles, resulting in regional disparities of malaria occurrence and varying incubation periods of malaria parasites.  Malaria is transmitted seasonally or not transmitted at all in certain parts of the world because climatic factors prevent malaria parasite growth cycle completion, whereas warmer regions, like tropical and subtropical areas, have higher transmission rates and year-round transmission.  Although the effect of climatic factors varies, it is generally thought that malaria transmission occurs most easily in temperatures ranging from 25–30 °C, relative humidity of 60%, and monthly rainfall of 80mm. 
+####Although the basic relationship between malaria and climate is well established, the specifics of this relationship are extremely complicated and require additional exploration.  For example, previous research has shown that not only does climate affect whether or not the parasite can complete its growth cycle, but various climatic factors also affect each other and the speed at which the growth cycle occurs, mosquito breeding, and mosquito lifespan.  Because of the varying effects of climatic variables on malaria, these variables are generally related to malaria incidence in a lagged fashion, ranging from weeks to months depending on the variable and the region.  Other factors that have been shown to be related to malaria incidence are seasonality, annual variation in climatic variables, and climate change over time.  
+#### In 2016 approximately 91% of deaths from malaria occurred in Africa, most notably Africa South of the Sahara, because of climatic factors mentioned above and additional factors like socio-economic vulnerability, lack of prevention and control practices, and a particularly efficient mosquito breed and severe species of malaria parasite.  Children are one of the most vulnerable groups to malaria because of their developing immune systems.   This report will explore the relationships between reported cases of malaria in children aged less than five and climatic factors, both temporally and spatially, in Mozambique, a country in Africa South of the Sahara with a tropical climate, a wide geographic rage, and high mortality rate from malaria. 
+
+##METHODS
+####Data on the number cases of malaria reported in children under five years were collected weekly (by epiweek) in Mozambique from 2010 - 2016(n = 50, 344). Data were collected in 142 districts of the 10 provinces, and an additional variable was included in analysis that divides Mozambique into four regions (Center, Coastal, Northern, and Southern). Climate in Mozambique differs drastically within regions, with the Coastal and Northern regions being generally more affected by monsoons, humidity, and higher temperatures, and the Center and Southern regions tending to be cooler and higher in altitude.   Data on the on the climatic variables of temperature (average temperature/ epiweek), rainfall (total rainfall in mm and average rainfall in mm/ epiweek), humidity (relative humidity percentage and saturation vapor pressure deficit in mm of mercury/epiweek), and large scale weather-activity(surface barometric pressure/epiweek) were collected.   Ten lagged variables (2 through 20 weeks in intervals of 2 weeks) were created for each climatic variable in order to examine temporal relationships between each climatic variable and malaria.  Additionally, because of the increase in rainfall, heat, and humidity in the summer season, a variable based on the epiweeks that span the months of December-February was created.  The summer variable includes epiweeks 1-9 and 49-52 and was created based on epiweek organization from 2010-2016.  
+##RESULTS
+####Every climatic variable had a lag more highly correlated malaria cases of children <5 years of age than the variable without lag, which is representing in Figure 1 and “Lag 0”.  The most highly correlated lags were 16 weeks for weekly average temperature (CC= 0.21, p<0.000), 4 weeks for weekly average rainfall (CC= 0.13, p<0.000) 4 weeks for total weekly rainfall (CC= 0.12, p<0.000), and 4 weeks for percent weekly relative humidity (0.25, p<0.000).  In this sample saturation vapor pressure deficit had both negative (4 week lag CC = -.21, p<0.000) and positive (20 week lag CC = .14, p<0.000) correlations.  Surface barometric pressure had a consistently negative correlation with malaria cases of children <5 years of age (all lags CC between -.126 and -.139, p<0.000) with 12 week lag having the strongest correlation.  The variables of weekly average temperature lagged 16 weeks, average weekly rainfall lagged 4 weeks, relative humidity lagged 4 weeks, and surface barometric pressure lagged 12 weeks were selected as climatic variables to use in further analyses because of consistency and strength of correlations.  Correlations of malaria and lagged climate variables are presented visually in Figure 1. 
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
 library(XML)
 library(epitools)
 library(Hmisc)
@@ -83,12 +99,6 @@ as.tibble(psfc_lag)
 psfc_lag <- mutate(psfc_lag, u5mal = data$u5mal)
 head(psfc_lag)
 
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-###Correltion on Lagged Variables 
-```{r, echo=T, message=T, warning=T}
-
 #Malaria and lag of tavg 
 cor_lag_tavg <- cor(tavg_lag,use = "complete.obs")
 #cor_lag_tavg2 <- rcorr(as.matrix(tavg_lag,use = "complete.obs"))
@@ -115,9 +125,7 @@ cor_lag_rh <- cor(rh_lag,use = "complete.obs")
 
 #Malaria and sd 
 cor_lag_sd <- cor(sd_lag,use = "complete.obs")
-#cor_lag_sd2 <- rcorr(as.matrix(sd_lag,use = "complete.obs"))
 #Lag 20 most highly positively correlated (.14), p= 0.000, lag 4 most negatively correlated (-.21) but sd and regular lag are also (-.2)- need to look into this 
-
 #Malaria and psfc
 cor_lag_psfc <- cor(psfc_lag,use = "complete.obs")
 #cor_lag_psfc2 <- rcorr(as.matrix(psfc_lag,use = "complete.obs"))
@@ -139,12 +147,18 @@ colnames(cormatrix) <- c("psfc", "sd", "rh", "rain", "rainTot", "tavg")
 #Remove u5mal row 
 cormatrix <- cormatrix[-12,]
 
-corrplot(cormatrix, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix),max(cormatrix)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Malaria and Lagged Climate Variable Correlations", mar=c(0,0,3,0))
+```
+###Figure 1. Correlations of Lagged Climatic Variables and Malaria 
+
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
+
+Figure1 <- corrplot(cormatrix, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix),max(cormatrix)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Malaria and Lagged Climate Variable Correlations", mar=c(0,0,3,0))
 
 ```
 
-###Graphs for associations of climate variabls with malaria including lags but not region 
-```{r, echo=T, message=T, warning=T}
+####Using the most correlated climatic variables described above, the relationships between climatic variables and malaria cases of children <5 years of age were explored further using splines to approximate curves (Figure 2.)  The relationship between average weekly temperature and malaria increases fairly linearly until it peaks between 25 and 28 °C.  Malaria cases increase with the rate of weekly total rainfall up to approximately 20mm of rainfall, at which point additional rainfall insignificantly impacted cases of malaria.  Weekly relative humidity percentage has a generally linear relationship with malaria cases with a peak near 90% relative humidity.  Surface barometric pressure also has a generally linear relationship with malaria cases until its peak between 930-950psi, at which point it decreases drastically until a less substantial peak around 1000psi.  
+
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
 #Add most associated lags to data so its all in one place 
 data3 <- as.tibble(data)
 
@@ -169,13 +183,17 @@ plot_psfc <- ggplot(data = data3) +
   geom_smooth(mapping = aes(x = psfc_lag_12, y = u5mal), color = "purple") + 
   labs(x = "Surface Barometric Pressure-12 wk lag", 
        y = "Cases per 1,000")
+```
 
+###Figure 2. Relationships between Climate Variables and Malaria
+```{r, echo = FALSE, warning = FALSE, message= FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
 #grid of this 
-cl_mal_plot <- grid.arrange(plot_tavg, plot_rain, plot_rh, plot_psfc, nrow= 2, top = textGrob("Relationships between Climate Variables and Malaria",gp=gpar(fontsize=16,font=3)))
+Figure2 <- grid.arrange(plot_tavg, plot_rain, plot_rh, plot_psfc, nrow= 2, top = textGrob("Relationships between Climate Variables and Malaria",gp=gpar(fontsize=16,font=3)))
 
 ```
-### Graphs for associations of climate variabls with malaria including lags and region 
-```{r, echo=T, message=T, warning=T}
+
+####Because of the potential regional differences in the relationships between climatic variables and malaria cases of children <5 years of age, the splines in Figure 2 were replicated with region as an additional variable (Figure 3). Relationships differed drastically between variables and regions.  The most notable trends are as follows: the relationships between malaria and climatic variables in the Southern region had the least similarity to the relationships described in Figure 2, and the Southern region had the fewest cases of malaria for all four climatic variables.  The minimum surface barometric pressure in the Coastal and Southern regions has a much higher minimum than other regions, but the cases of malaria are much higher in the Coastal region than the Southern. The Northern region had the most similarity to the relationships described in Figure 2, and the Northern region had the most cases of malaria for all four climatic variables.  The relationship between average weekly rainfall and malaria in the Center region has a much more drastic increase than the plateau observed in average weekly rainfall in Figure 2. 
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
 plot2_tavg <- ggplot(data = data3) +
   geom_smooth(mapping = aes(x = tavg_lag_16, y = u5mal, color = Region)) + 
   labs(x = "Avg Temperature-16 wk lag", 
@@ -192,18 +210,24 @@ plot2_psfc <- ggplot(data = data3) +
   geom_smooth(mapping = aes(x = psfc_lag_12, y = u5mal,color = Region)) + 
   labs(x = "Surface Barometric Pressure-12 wk lag", 
        y = "Cases per 1,000", color = "Region")
-
-#grid of this 
-reg_plot <- grid.arrange(plot2_tavg, plot2_rain, plot2_rh, plot2_psfc, nrow= 2, top = textGrob("Climate Variable and Malaria Relationships by Region",gp=gpar(fontsize=15,font=3)))
 ```
-#Change in Malaria, tavg, and rain over time with season added 
-```{r, echo=T, message=T, warning=T}
+
+###Figure 3.  Relationships between Climate Variable and Malaria by Region
+```{r, echo = FALSE, warning = FALSE, message = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
+#grid of this 
+Figure3 <- grid.arrange(plot2_tavg, plot2_rain, plot2_rh, plot2_psfc, nrow= 2, top = textGrob("Relationships between Climate Variable and Malaria by Region",gp=gpar(fontsize=15,font=3)))
+```
+
+####Because climate change over time and the summer season both have potential relationships with malaria incidence over time, Figures 4 and 5 were created to explore the temporal changes in climate variables and malaria from 2010 to 2016 as well as the effect of the summer season on malaria cases both regionally and over time.  Figure 4 shows that malaria cases of children <5 years of age did increase during the years 2010-2016, with the most noticeable increase occurring between 2013 and 2014.  Many more cases of malaria occurred in the Coastal and Northern regions than the Center and Southern regions, but the summer season variable did not seem to account for a disproportionate incidence of cases over time or cases regionally.  Although not shown visually, this relationship was explored temporally as well and the relationships between malaria, region, and summer season stayed fairly constant.  Figure 5 shows that climatic variables do not seem to have a notable increase or decrease over time other than a large spike in rainfall in 2016 and a slight decrease in relative humidity in 2015 and 2016.
+
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
 #Create summer variable 
 data3 <- mutate(data3, Season = ifelse(Epiweek < 10, "summer", ifelse(Epiweek > 47, "summer", "other")))
 head(data3)
-data4 <- select(data3, Epiweek, Epiyear, Season, u5mal, Region, rain, tavg)
+data4 <- select(data3, Epiweek, Epiyear, Season, u5mal, Region, rain, rh, psfc, tavg)
 head(data4)
 (as.tibble(data4))
+limyr <- subset(data4, Epiyear <= 2016 & Epiyear > 2010)
 
 #Create histograms for season/total of var over time 
 seas_mal <- ggplot(data4, aes(x=factor(Epiyear), y=u5mal, fill = Season, Color = Season)) +
@@ -212,41 +236,98 @@ seas_mal <- ggplot(data4, aes(x=factor(Epiyear), y=u5mal, fill = Season, Color =
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
     labs(title = "Age <5 Malaria Cases per 1000 by EpiYear and Season", x = "Year", y = "Malaria", color = "Season")
 
-seas_tavg <- ggplot(data4, aes(x=factor(Epiyear), y=tavg, fill = Season, Color = Season)) +
-  geom_histogram(stat = "identity", breaks=2010:2016) +
-   scale_fill_manual(values = c("aquamarine","aquamarine3")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    labs(title = "Average Weekly Temp by EpiYear and Season", x = "Year", y = "Temp", color = "Season")
-
-seas_rain <- ggplot(data4, aes(x=factor(Epiyear), y=rain, fill = Season, Color = Season)) +
-  geom_histogram(stat = "identity", breaks=2010:2016) +
-  scale_fill_manual(values = c("aquamarine","aquamarine3")) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    labs(title = "Average Weekly Rainfall by EpiYear and Season", x = "Year", y = "Rainfall", color = "Season")
-
-#Graphic with all 3 vars 
-seas_plot <- grid.arrange(seas_mal, seas_tavg, seas_rain, nrow=3, top = textGrob("Effect of Summer Season on Malaria, Rainfall, and Temperature Over Time",gp=gpar(fontsize=15,font=3)))
-
-```
-###Season and Malaria by Region (and year)
-```{r, echo=T, message=T, warning=T}
-
-limyr <- subset(data4, Epiyear <= 2016 & Epiyear > 2010)
-#Don't want to show this graphic - use in write up to say relationship b/t season/malaria and region does not differ much over time 
-
-#seas_reg <- ggplot(data = limyr, aes(x = Region, y = u5mal, fill = Season, Color = Season)) +
-  #geom_histogram(aes(colour = Season, fill = Season), stat="identity") + facet_wrap(~ Epiyear, nrow=2)+ 
-  #theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) 
-
 seas_reg_allyrs <- ggplot(data4, aes(x=factor(Region), y=u5mal, fill = Season, Color = Season)) +
   geom_histogram(stat = "identity", breaks=2010:2016) +
   scale_fill_manual(values = c("aquamarine","aquamarine3")) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
     labs(title = "Age <5 Malaria Cases per 1000 by Region and Season", x = "Region", y = "Malaria", color = "Season")
-
 ```
-###Maps
-```{r, echo=T, message=T, warning=T}
+
+###Figure 4. Relationships Between Malaria and Summer over Time and by Region
+```{r, echo = FALSE, include=TRUE, results="hide",fig.width=8, fig.height=6}
+#Grid
+Figure4 <- grid.arrange(seas_mal,seas_reg_allyrs, nrow=2, top = textGrob("Relationships Between Malaria and Summer over Time and by Region",gp=gpar(fontsize=15,font=3)))
+
+#Don't want to show this graphic - use in write up to say relationship b/t season/malaria and region does not differ much over time 
+
+#seas_reg <- ggplot(data = limyr, aes(x = Region, y = u5mal, fill = Season, Color = Season)) +
+  #geom_histogram(aes(colour = Season, fill = Season), stat="identity") + facet_wrap(~ Epiyear, nrow=2)+ 
+  #theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) 
+```
+
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
+time_rain <- ggplot(data4, aes(x=factor(Epiyear), y=rain)) +
+  geom_col(stat = "identity", breaks=2010:2016) + labs(title = "Rainfall by EpiYear", x = "Year", y = "Rainfall")
+
+time_tavg <- ggplot(data4, aes(x=factor(Epiyear), y=tavg)) +
+  geom_col(stat = "identity", breaks=2010:2016) + labs(title = "Temp by EpiYear", x = "Year", y = "Temp")
+
+time_rh <- ggplot(data4, aes(x=factor(Epiyear), y=rh)) +
+  geom_col(stat = "identity", breaks=2010:2016) + labs(title = "Relative Humidity by EpiYear", x = "Year", y = "Relative Humidity")
+
+time_psfc <- ggplot(data4, aes(x=factor(Epiyear), y=psfc)) +
+  geom_col(stat = "identity", breaks=2010:2016) + labs(title = "Surface Barometric Pressure by EpiYear", x = "Year", y = "Surface Barometric Pressure")
+```
+###Figure 5. Change in Climatic Variables over Time
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
+#Graphic with all 4 vars 
+Figure5 <- grid.arrange(time_rain, time_tavg,time_rh,time_psfc, nrow=2, top = textGrob("Change in Climatic Variables over Time",gp=gpar(fontsize=15,font=3)))
+```
+
+####The majority of malaria cases of children <5 years occured in the Coastal and Northern regions, which necessitates an exploration of correlations between climatic variables and malaria incidence in these regions separate from the country as a whole.  Figure 6 shows these correlations.  In the Coastal region, average temperature (CC = .27, p<0.000) is more highly positively correlated with malaria than the sample as a whole, but average rainfall (CC= .04, p<0.000) and relative humidity (CC= .09, p<0.000) are less strongly positively correlated with malaria than the sample as a whole.  Surface barometric pressure has a comparable negative correlation to malaria compared to  the sample as a whole (CC=-.25, p<0.000).  In the Northern region, average temperature (CC = .28, p<0.000), average rainfall (CC= .25, p<0.000), and relative humidity (CC= .25, p<0.000) are more highly positively correlated with malaria than the sample as a whole.  Surface barometric pressure has a weaker negative correlation to malaria than the sample as a whole (CC=-.08, p<0.000). 
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
+data6 <- select(data3, u5mal, tavg, tavg_lag_16, rain_lag_04, rh_lag_04, psfc_lag_12, Epiyear, Region)
+summary(data6)
+
+data6 <- mutate(data6, coastal = Region == "Coastal", northern = Region == "Northern")
+
+data6$coastal <- as.numeric(data6$coastal)
+data6$northern <- as.numeric(data6$northern)
+
+data.coastal <- subset(data6, coastal == 1)
+data.northern <- subset(data6, northern == 1)
+
+cor.coastal.temp <- cor(data.coastal$u5mal, data.coastal$tavg_lag_16,  method = "pearson", use = "complete.obs")
+#t = 38.361, df = 18129, p-value < 2.2e-16, CC 0.2740063 
+cor.coastal.rain <- cor(data.coastal$u5mal, data.coastal$rain_lag_04,  method = "pearson", use = "complete.obs")
+#Xt = 4.9355, df = 18129, p-value = 8.067e-07, CC 0.03663103 
+cor.coastal.rh <- cor(data.coastal$u5mal, data.coastal$rh_lag_04,  method = "pearson", use = "complete.obs")
+#t = 12.463, df = 18129, p-value < 2.2e-16, CC 0.09216856  
+cor.coastal.psfc <- cor(data.coastal$u5mal, data.coastal$psfc_lag_12,  method = "pearson", use = "complete.obs")
+# t = -35.097, df = 18129, p-value < 2.2e-16, CC -0.2522362 
+
+cor.northern.temp <- cor(data.northern$u5mal, data.northern$tavg_lag_16,  method = "pearson", use = "complete.obs")
+#t = 34.44, df = 13535, p-value < 2.2e-16, CC #0.2838546 
+cor.northern.rain <- cor(data.northern$u5mal, data.northern$rain_lag_04,  method = "pearson", use = "complete.obs")
+#t = 30.054, df = 13547, p-value < 2.2e-16, CC 0.2500113 
+cor.northern.rh<- cor(data.northern$u5mal, data.northern$rh_lag_04,  method = "pearson", use = "complete.obs")
+#t = 29.701, df = 13547, p-value < 2.2e-16, CC 0.247257 
+cor.northern.psfc<- cor(data.northern$u5mal, data.northern$psfc_lag_12,  method = "pearson", use = "complete.obs")
+#t = -9.0654, df = 13539, p-value < 2.2e-16, CC -0.07767487 
+
+cormatrix.coastal <- matrix(c(cor.coastal.psfc,cor.coastal.rain, cor.coastal.rh, cor.coastal.temp),nrow=1, ncol=4)
+rownames(cormatrix.coastal) <- c("u5mal")
+colnames(cormatrix.coastal) <- c("psfc", "rain", "rh", "tavg")
+
+cormatrix.northern <- matrix(c(cor.northern.psfc,cor.northern.rain, cor.northern.rh, cor.northern.temp),nrow=1, ncol=4)
+rownames(cormatrix.northern) <- c("u5mal")
+colnames(cormatrix.northern) <- c("psfc", "rain", "rh", "tavg")
+
+corrplot.coastal <- corrplot(cormatrix.coastal, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix.coastal),max(cormatrix.coastal)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Coastal Region", mar=c(0,0,3,0))
+
+corrplot.northern <- corrplot(cormatrix.northern, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix.northern),max(cormatrix.northern)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Northern Region", mar=c(0,0,3,0))
+```
+
+### Figure 6. Correlations of Malaria and Climate Variables - Northern and Coastal Regions
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
+Figure6 <- par(mfrow=c(2,1))
+corrplot(cormatrix.coastal, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix.coastal),max(cormatrix.coastal)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Coastal Region", mar=c(0,0,3,0))
+corrplot(cormatrix.northern, method="circle", bg = "grey98", col=brewer.pal(n=8, name="RdBu"), cl.lim=c(min(cormatrix.northern),max(cormatrix.northern)), is.corr = FALSE, cl.ratio = 0.2, cl.align = "r", win.asp = .6, tl.srt=30, title = "Northern Region", mar=c(0,0,3,0))
+```
+
+####Figures 7-11 show spatial relationships of the four climatic variables, and malaria, using maps.  Figure 7 shows that total malaria cases seem to be increase over time, with the most significant increases and number of cases occurring in the northern provinces of the country. Figure 8 shows that 2016 was a particularly rainy year, but that rainfall did not change significantly over time other than the southern provinces of the country becoming slightly less rainy and the northern provinces becoming slightly more rainy.  Figure 9 shows that the highest average temperatures tend to occur in the coastal provinces with years 2015 and 2016 showing noticeable average temperature increases, especially in the coastal provinces.  Figure 10 shows that the highest average relative humidity occured in the central coastal provinces, but that relative humidity decreased over time, especially in 2015 and 2016.  Figure 11 shows that the highest levels of average surface barometric pressure occurred in the southern and southern coastal regions, but that there were not significant changes in average surface barometric pressure over time.  
+
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
 #Creat dataframe for mapping 
 data2 <- as.tibble(data)
 data2$tavglag <- tavg_lag$lag_16
@@ -310,45 +391,103 @@ MalPal <- brewer.pal(n = 7, name = "Greens")
 TavgPal <- brewer.pal(n = 7, name = "Reds")
 RhPal <- brewer.pal(n = 7, name = "Oranges")
 PsfcPal <- brewer.pal(n = 7, name = "Purples")
+```
 
+
+```{r, echo=FALSE,include=FALSE, fig.width=8, fig.height=6}
 #Malaria year maps 
-breaks.qt.mal <- classIntervals(1125:19299, n = 6, style = "quantile", intervalClosure = "right")
-Mal_map.plot <- spplot(polydat, c("mal11", "mal12", "mal13", "mal14", "mal15", "mal16"), 
+breaks.qt.mal <- classIntervals(1125:19500, n = 6, style = "quantile", intervalClosure = "right")
+Figure7 <- spplot(polydat, c("mal11", "mal12", "mal13", "mal14", "mal15", "mal16"), 
 names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
 colorkey=list(space="right"), scales = list(draw = TRUE), 
 main = list(label = "Total Under 5 malaria Cases by Year", cex = .75), 
 as.table = TRUE, col.regions = MalPal, col="transparent", at = breaks.qt.mal$brks)
+```
+###Figure 7. Map - Total Under 5 Malaria Cases by Year
+```{r, fig.width=8, fig.height=6, echo=FALSE}
+Figure7
+```
 
+```{r, echo = FALSE, include=TRUE, comment = NA, fig.width=8, fig.height=6, warning = FALSE}
+###Figure 8. Map - Total Rainfall by Year
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
 #Rain year maps
 breaks.qt.rain <- classIntervals(180.5:1600, n = 6, style = "quantile", intervalClosure = "right")
-Rain_map.plot <- spplot(polydat, c("rain11", "rain12", "rain13", "rain14", "rain15", "rain16"), 
+Figure8 <- spplot(polydat, c("rain11", "rain12", "rain13", "rain14", "rain15", "rain16"), 
 names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
 colorkey=list(space="right"), scales = list(draw = TRUE), 
 main = list(label = "Total Rainfall by Year",cex = .75), 
 as.table = TRUE, col.regions = RainPal, col="transparent", at = breaks.qt.rain$brks)
+```
 
+###Figure 8. Map - Total Rainfall by Year
+```{r, fig.width=8, fig.height=6, echo=FALSE, warning = FALSE, message = FALSE}
+Figure8
+```
+
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
 #Tavg and year maps 
 breaks.qt.tavg <- classIntervals(21:25.5, n = 6, style = "quantile", intervalClosure = "right")
-Tavg_map.plot <- spplot(polydat, c("t11", "t12", "t13", "t14", "t15", "t16"), 
+Figure9 <- spplot(polydat, c("t11", "t12", "t13", "t14", "t15", "t16"), 
 names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
 colorkey=list(space="right"), scales = list(draw = TRUE), 
 main = list(label = "Average Temp by Year",cex=.75), 
 as.table = TRUE, col.regions = TavgPal, col="transparent", at = breaks.qt.tavg$brks)
+```
 
+### Figure 9. Map - Average Temp by Year
+```{r, fig.width=8, fig.height=6, echo=FALSE}
+Figure9
+```
+
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
 #rh and year maps
-breaks.qt.rh <- classIntervals(59.5:80, n = 6, style = "quantile", intervalClosure = "right")
-Rh_map.plot <- spplot(polydat, c("rh11", "rh12", "rh13", "rh14", "rh15", "rh16"), 
+breaks.qt.rh <- classIntervals(50:82, n = 6, style = "quantile", intervalClosure = "right")
+Figure10 <- spplot(polydat, c("rh11", "rh12", "rh13", "rh14", "rh15", "rh16"), 
 names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
 colorkey=list(space="right"), scales = list(draw = TRUE), 
-main = list(label = "Average rh by Year", cex = .75), 
+main = list(label = "Average Relative Humidity by Year", cex = .75), 
 as.table = TRUE, col.regions = RhPal, col="transparent", at = breaks.qt.rh$brks)
+```
 
+### Figure 10. Map -  Average Relative Humidity by Year
+```{r, fig.width=8, fig.height=6, echo=FALSE}
+Figure10
+```
+
+```{r, echo = FALSE, include=TRUE,results="hide",fig.width=8, fig.height=6}
 #psfc and year maps 
 breaks.qt.psfc <- classIntervals(927.5:1011, n = 6, style = "quantile", intervalClosure = "right")
-Psfc_map.plot <- spplot(polydat, c("psfc11", "psfc12", "psfc13", "psfc14", "psfc15", "psfc16"), 
+Figure11 <- spplot(polydat, c("psfc11", "psfc12", "psfc13", "psfc14", "psfc15", "psfc16"), 
 names.attr = c("2011", "2012", "2013", "2014", "2015", "2016"), 
 colorkey=list(space="right"), scales = list(draw = TRUE), 
-main = list(label ="Average psfc by Year", cex = .75),
+main = list(label ="Average Surface Barometric Pressure by Year", cex = .75),
 as.table = TRUE, col.regions = PsfcPal, col="transparent", at = breaks.qt.psfc$brks)
-
 ```
+
+### Figure 11. Map - Average Surface Barometric Pressure by Year
+```{r, fig.width=8, fig.height=6, echo=FALSE}
+Figure11
+```
+
+##CONCLUSIONS 
+####In line with literature on the topic of malaria and climatic variables, climatic variables are correlated with malaria cases of children <5 years in a lagged fashion.  In this sample the most highly associated lags of each climatic variable did have statistically significant correlations with malaria, and the strongest correlations in the sample overall were with average temperature and relative humidity.  The peak of the spline comparing average temperature and malaria is in line with what previous research suggests as a temperature range that leads to effective malaria transmission (25–30 °C) but the peak of the relative humidity spline at approximately 90% is higher than percent relative humidity suggested by the literature (60%).  This suggests most effective malaria transmission in Mozambique may occur at higher rates of relative humidity than previous research suggests, but this must be explored further, especially because on the unexpected correlations found between malaria and saturation vapor pressure deficit in this sample.  Although a higher correlation with rainfall might be expected in this sample, the lower correlation could be attributed to the plateau of the average rainfall spline after approximately 20mm/week.  Also, the plateau point is in line with the point of effective transmission suggested in the literature(80mm/month).  Surface barometric pressure, the measure of large scale weather activity in this sample, is negatively correlated with malaria in the sample overall, but when viewed graphically it appears that this could be attributed to multiple peaks in the data and the varied baseline surface barometric pressure measures between regions.  The association between surface barometric pressure and malaria in Mozambique needs to be explored further. 
+####Although literature on the topic suggests that the majority of malaria cases may occur in the summer season because of temperature, rainfall, and humidity rates during the summer, this sample did not show this trend.  The results in this sample can be attributed to the potential need for for a lagged summer variable or the geographic disparities in both seasonal trends and malaria incidence in Mozambique.  Also, there is a possibility that the changes in climate over time make seasonality less of a predictor of malaria incidence.  The seasonality of malaria requires further exploration.  
+####This data does show that spatial factors in Mozambique have an impact on climatic variables, malaria incidence, and the relationship between malaria incidence and climatice variables, both regionally and by province.  Malaria cases of children <5 years were much higher in the Coastal and Northern regions, which is plausible considering the climates of these regions established in previous research and that highest average temperatures and relative humidity occured in these areas in this sample.   Additionally, these regions have higher correlations with some climatic variables compared to each other and to the sample as a whole.  This suggests that the geographical variation in Mozambique further complicates the relationship between climate and malaria, and the highest correlations between malaria and climatic variables may have to do with regional homogeneity.  However, the regional trends do not detract from some of the most significant trends observed in this sample overall, which are the temporal increase in malaria cases of children <5 years and average temperature, as well as the spatial relationships between climate and malaria. 
+
+##REFERENCES
+####1. Malaria:Disease . (2015, October 7). In Centers for Disease Control and Prevention . Retrieved October 22, 2018, from https://www.cdc.gov/malaria/about/disease.html
+####2.Hajison, P. L., Mwakikunga, B. M., Mathanga, D. P., & Feresu, S. A. (2017, December). Seasonal variation of malaria cases in children aged less than 5 years old following weather change in Zomba district, Malawi. Malaria Journal, 16(264). 
+####3. Malaria:Malaria's Impact Worldwide . (2018, May 8). In Centers for Disease Control and Prevention . Retrieved October 22, 2018, from https://www.cdc.gov/malaria/malaria_worldwide/impact.html 
+####4. Malaria:Where Malaria Occurs . (2017, March 17). In Centers for Disease Control and Prevention . Retrieved October 22, 2018, from https://www.cdc.gov/malaria/about/distribution.html 
+####5. Hajison, P. L., Mwakikunga, B. M., Mathanga, D. P., & Feresu, S. A. (2017, December). Seasonal variation of malaria cases in children aged less than 5 years old following weather change in Zomba district, Malawi. Malaria Journal, 16(264). 
+####6. Li, T., Yang, Z., & Wang, M. (2013). Temperature, relative humidity and sunshine may be the effective predictors for occurrence of malaria in Guangzhou, southern China, 2006–2012. Parasites and Vectors, 6(155). doi:doi:10.1186/1756-3305-6-155
+####7.Paaijmans, K. P., Read, A. F., & Thomas, M. B. (2009, August 18). Understanding the link between malaria risk and climate. National Academy of Sciences, 106(33). doi:https://doi.org/10.1073/pnas.0903423106
+####8. Zacarias, O. P., & Andersson, M. (2011). Spatial and temporal patterns of malaria incidence in Mozambique. Malaria Journal, 10, 189. http://doi.org/10.1186/1475-2875-10-189
+####9. Zhou, G., Minakawa, N., Githeko, A. K., Yan, G., & Herren, H. R. (2004, February 24). Association between Climate Variability and Malaria Epidemics in the East African Highlands. National Academy of Sciences, 101(8). Retrieved from https://www.jstor.org/stable/3371299
+####10. Seasonal variation of malaria cases in children aged less than 5 years old following weather change in Zomba district, Malawi.  Hajison, P. L., Mwakikunga, B. M., Mathanga, D. P., & Feresu, S. A. (2017, December). Seasonal variation of malaria cases in children aged less than 5 years old following weather change in Zomba district, Malawi. Malaria Journal, 16(264). 
+####11.  Nanvyat, N., Mulambalah, C., Barshep, Y., Ajiji, J., Dakul, D., & Tsingalia, H. (2018). Malaria transmission trends and its lagged association with climatic factors in the highlands of Plateau State, Nigeria. Tropical Parasitology, 8(1), 18–23. http://doi.org/10.4103/tp.TP_35_17
+####12. Malaria:Malaria's Impact Worldwide . (2018, May 8). In Centers for Disease Control and Prevention . Retrieved October 22, 2018, from https://www.cdc.gov/malaria/malaria_worldwide/impact.html 
+####13. Zacarias, O. P., & Andersson, M. (2011). Spatial and temporal patterns of malaria incidence in Mozambique. Malaria Journal, 10, 189. http://doi.org/10.1186/1475-2875-10-189.  
+#### 14. Climate - Mozambique . (n.d.). In Climates to Travel World Climate Guide . Retrieved October 22, 2018, from https://www.climatestotravel.com/climate/mozambique
+####15. EPI Week Calendars & Reports. (n.d.). In Central Mass. Mosquito Control Project. Retrieved October 25, 2018, from https://www.cmmcp.org/season-summary-data/pages/epi-week-calendars-reports
